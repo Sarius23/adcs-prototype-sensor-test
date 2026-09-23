@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ux_device_cdc_acm.h"
+#include "kx134.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +50,9 @@ SPI_HandleTypeDef hspi2;
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
+static KX134_t kx134;
+static KX134_Data kx_data;
+static KX134_Status kx_status;
 
 /* USER CODE END PV */
 
@@ -99,6 +103,10 @@ int main(void)
   MX_SPI2_Init();
   MX_USBX_Device_Init();
   /* USER CODE BEGIN 2 */
+  kx_status = KX134_Init(&kx134,
+                       &hspi1,
+                       KX_CS_GPIO_Port,
+                       KX_CS_Pin);
 
   /* USER CODE END 2 */
 
@@ -115,6 +123,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    static uint32_t last_kx_read = 0U;
+
+    if ((HAL_GetTick() - last_kx_read) >= 1000U)
+    {
+      last_kx_read = HAL_GetTick();
+
+      if (kx_status == KX134_OK)
+      {
+        kx_status = KX134_ReadAcceleration(&kx134, &kx_data);
+      }
+    }
   }
   /* USER CODE END 3 */
 }
